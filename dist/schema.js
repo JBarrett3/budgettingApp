@@ -1,9 +1,14 @@
-export const typeDefs = `#grapql
-    type Book {
-        title: String
-        author: String
+export const typeDefs = `
+    type User {
+        id: ID!
+        name: String!
+        username: String!
+        password: String!
+        desiredSavingsPercentage: Float
+        salary: Float
     }
     type Query {
-        books: [Book]
+        users: [User]
+        getPasswordByUsername(username: String): String
     }
 `;
