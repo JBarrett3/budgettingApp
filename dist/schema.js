@@ -1,10 +1,10 @@
 export const typeDefs = `
     type User {
-        id: ID!
+        id: ID
         name: String
         auth: Auth
         finance: Finance
-        accounts: [Account!]
+        accounts: [Account]
     }
     type Auth {
         id: ID
@@ -33,5 +33,14 @@ export const typeDefs = `
     }
     type Query {
         users: [User]
+        user(userId: ID!): User
+    }
+    type Mutation {
+        createUserByName(name: String!): ID
+        deleteUserByUserID(userId: ID!): Boolean
+        updateAuthByUserID(userId: ID!, username: String!, password: String!): Auth
+        updateFinanceByUserID(userId: ID!, desiredSavingsPercentage: Float!, salary: Float!): Finance
+        addAccountByUserID(userId: ID!, holding: Float!, interestRate: Float!): Account
+        delAccountByAccntID(accntID: ID!): Boolean
     }
 `;
