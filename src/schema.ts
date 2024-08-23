@@ -17,13 +17,12 @@ export const typeDefs = `
         user: User
         f01k: Float
         salary: Float
-	pre_tax_income: Float
-	social_security: Float
-	medicare_tax: Float
-	federal_tax: Float
-	state_tax: Float
-	discretionary: Float
-	
+        pre_tax_income: Float
+        social_security: Float
+        medicare_tax: Float
+        federal_tax: Float
+        state_tax: Float
+        discretionary: Float
     }
     type Account {
         id: ID
@@ -39,7 +38,7 @@ export const typeDefs = `
         createUserByName(name: String!): ID
         deleteUserByUserID(userId: ID!): Boolean
         updateAuthByUserID(userId: ID!, username: String!, password: String!): Auth
-        updateFinanceByUserID(userId: ID!, desiredSavingsPercentage: Float!, salary: Float!): Finance
+        updateFinanceByUserID(userId: ID!, f01k: Float!, salary: Float!, pre_tax_income: Float!, social_security: Float!, medicare_tax: Float!, federal_tax: Float!, state_tax: Float!, discretionary: Float!): Finance
         addAccountByUserID(userId: ID!, holding: Float!, interestRate: Float!): Account
         delAccountByAccntID(accntID: ID!): Boolean
     }

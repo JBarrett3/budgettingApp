@@ -88,8 +88,14 @@ export const resolvers = {
             db.finances = db.finances.map((fin) => {
                 if (fin.userId === args.userId) {
                     return { ...fin,
-                        desiredSavingsPercentage: args.desiredSavingsPercentage,
-                        salary: args.salary
+                        f01k: args.f01k,
+                        salary: args.salary,
+                        pre_tax_income: args.pre_tax_income,
+                        social_security: args.social_security,
+                        medicare_tax: args.medicare_tax,
+                        federal_tax: args.federal_tax,
+                        state_tax: args.state_tax,
+                        discretionary: args.discretionary
                     };
                 }
                 return fin;
