@@ -1,31 +1,74 @@
 export const db = {
   users: [
     {
+      id: 1,
       name: 'George Washington',
-      username: 'gWash1789',
-      password: 'americaRules', //we'll make passwords secure when we recreate the db with mongo
-      desiredSavingsPercentage: 0.30,
-      salary: 100,
+      finId: 1,
+      accntIds: [1]
     },
     {
+      id: 2,
       name: 'John Adams',
-      username: 'jAdams1797',
-      password: 'americaRules',
-      salary: 50,
+      authId: 1
     },
     {
+      id: 3,
       name: 'Thomas Jefferson',
-      username: 'tJeff1801',
-      password: 'americaRules',
-      desiredSavingsPercentage: 0.70,
-      salary: 500,
+      authId: 2,
+      finId: 2
     },
     {
+      id: 4,
       name: 'James Madison',
-      username: 'jMad1809',
-      password: 'americaRules',
-      desiredSavingsPercentage: 0.0,
-      salary: 30,
+      accntIds: [2,3]
+    }
+  ],
+  auths: [
+    {
+      id: 1,
+      userId: 2,
+      username: 'jAdams1797',
+      password: 'americaRules'
+    },
+    {
+      id: 2,
+      userId: 3,
+      username: 'tJeff1801',
+      password: 'americaRules'
+    }
+  ],
+  finances: [
+    {
+      id: 1,
+      userId: 1,
+      desiredSavingsPercentage: 0.3,
+      salary: 50
+    },
+    {
+      id: 2,
+      userId: 3,
+      desiredSavingsPercentage: 0.7,
+      salary: 100
+    }
+  ],
+  accounts: [
+    {
+      id: 1,
+      userId: 1,
+      holding: 70,
+      interestRate: 0.05
+    },
+    {
+      id: 2,
+      userId: 4,
+      holding: 50,
+      interestRate: 0.15
+    },
+    {
+      id: 3,
+      userId: 4,
+      holding: 30,
+      interestRate: 0.01
     }
   ]
 }
