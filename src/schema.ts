@@ -15,14 +15,14 @@ export const typeDefs = `
     type Finance {
         id: ID
         user: User
-        f01k: Number
-        salary: Number
-	pre_tax_income: Number
-	social_security: Number
-	medicare_tax: Number
-	federal_tax: Number
-	state_tax: Number
-	discretionary: Number
+        f01k: Float
+        salary: Float
+	pre_tax_income: Float
+	social_security: Float
+	medicare_tax: Float
+	federal_tax: Float
+	state_tax: Float
+	discretionary: Float
 	
     }
     type Account {
