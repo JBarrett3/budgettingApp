@@ -15,7 +15,8 @@ New developers should follow these steps on their local machines.
 ## Graph structure
 
 #### Schema model
-Schema handles maintaining our data in an organized structure
+Schema handles maintaining our data in an organized structure.
+Any schema changes need to be reflected in the graphQL schema file (graphSchema.ts), the graphQL resolvers files (resolvers.ts), and the mongodb schema file (setupDB.ts).
 
 #### Resolver model
 Resolvers handle accessing the graph at entrypoints in order to query or mutate data
