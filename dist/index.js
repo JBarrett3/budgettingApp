@@ -3,6 +3,8 @@ import { startStandaloneServer } from '@apollo/server/standalone';
 import { PORT } from './consts.js';
 import { typeDefs } from './schema.js';
 import { resolvers } from './resolvers.js';
+import { setupDB } from './setupDB.js';
+await setupDB();
 const server = new ApolloServer({
     typeDefs,
     resolvers,
