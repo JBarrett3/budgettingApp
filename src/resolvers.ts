@@ -1,144 +1,129 @@
-import { db } from './db.js'
+import { mongoModels } from './setupDB.js'
+import { DEFAULTS } from './consts.js'
 export const resolvers = {
     User: {
-        auth(parent, args, context) {
-            return db.auths.find((auth) => auth.userId === parent.id)
+        async auth(parent, args, context) {
+            return await mongoModels.authModel.findById(parent.authId);
         },
-        finance(parent, args, context) {
-            return db.finances.find((fin) => fin.userId === parent.id)
+        async finance(parent, args, context) {
+            return await mongoModels.financeModel.findById(parent.finId);
         },
-        accounts(parent, args, context) {
-            return db.accounts.filter((accnt) => accnt.userId === parent.id)
+        async accounts(parent, args, context) {
+            return await parent.accntIds.map((accntId) => mongoModels.accountModel.findById(accntId));
         }
     },
     Auth: {
-        user(parent, args, context) {
-            return db.users.find((user) => user.id === parent.userId)
+        async user(parent, args, context) {
+            return await mongoModels.userModel.findById(parent.userId);
         }
     },
     Finance: {
-        user(parent, args, context) {
-            return db.users.find((user) => user.id === parent.userId)
+        async user(parent, args, context) {
+            return await mongoModels.financeModel.findById(parent.userId);
         }
     },
     Account: {
-        user(parent, args, context) {
-            return db.users.find((user) => user.id === parent.userId)
+        async user(parent, args, context) {
+            return await mongoModels.accountModel.findById(parent.userId);
         }
     },
     Query: {
-        users: () => db.users,
-        user(parent, args, context) {
-            return db.users.find((user) => user.id === args.userId)
+        users: async () => await mongoModels.userModel.find({}),
+        async user(parent, args, context) {
+            return await mongoModels.userModel.findById(args.userId);
         }
     },
     Mutation: {
-        createUserByName(parent, args, context) {
-            const maxUserId = db.users.reduce(
-                (accumulator, currentValue) => Math.max(accumulator, parseInt(currentValue.id)),
-                1,
-            );
-            const newUserId = String(maxUserId + 1)
-            const maxAuthId = db.auths.reduce(
-                (accumulator, currentValue) => Math.max(accumulator, parseInt(currentValue.id)),
-                1,
-            );
-            const newAuthId = String(maxAuthId + 1)
-            const maxFinId = db.finances.reduce(
-                (accumulator, currentValue) => Math.max(accumulator, parseInt(currentValue.id)),
-                1,
-            );
-            const newFinId = String(maxFinId + 1)
-            const newUser = {
-                id: newUserId,
+        async createUserByName(parent, args, context) {
+            const newUser = await mongoModels.userModel.create({
                 name: args.name,
-                auth: {
-                    id: newAuthId,
-                    user: newUserId,
-                    username: '',
-                    password: ''
-                },
-                finance: {
-                    id: newFinId,
-                    user: newUserId,
-                    desiredSavingsPercentage: 0,
-                    salary: 0
-                },
                 accntIds: []
+            });
+            const newAuth = await mongoModels.authModel.create({
+                userId: newUser.id,
+                username: (typeof args.username === 'undefined') ? DEFAULTS.username : args.username,
+                password: (typeof args.password === 'undefined') ? DEFAULTS.password : args.password
+            });
+            const newFin = await mongoModels.financeModel.create({
+                userId: newUser.id,
+                f01k: (typeof args.f01k === 'undefined') ? DEFAULTS.f01k : args.f01k,
+                salary: (typeof args.salary === 'undefined') ? DEFAULTS.salary : args.salary,
+                pre_tax_income: (typeof args.pre_tax_income === 'undefined') ? DEFAULTS.pre_tax_income : args.pre_tax_income,
+                social_security: (typeof args.social_security === 'undefined') ? DEFAULTS.social_security : args.social_security,
+                medicare_tax: (typeof args.medicare_tax === 'undefined') ? DEFAULTS.medicare_tax : args.medicare_tax,
+                federal_tax: (typeof args.federal_tax === 'undefined') ? DEFAULTS.federal_tax : args.federal_tax,
+                state_tax: (typeof args.state_tax === 'undefined') ? DEFAULTS.state_tax : args.state_tax,
+                discretionary: (typeof args.discretionary === 'undefined') ? DEFAULTS.discretionary : args.discretionary
+            });
+            newUser.authId = newAuth.id;
+            newUser.finId = newFin.id;
+            await newUser.save();
+            return newUser.id;
+        },
+        async deleteUserByUserID(parent, args, context) {
+            const user = await mongoModels.userModel.findById(args.userId);
+            if (typeof user === 'undefined') {
+                return false;
+            };
+            mongoModels.financeModel.deleteOne({ _id: user.finId });
+            mongoModels.authModel.deleteOne({ _id: user.authId });
+            user.accntIds.map((accntId) => mongoModels.accountModel.deleteOne({ _id: accntId }));
+            mongoModels.userModel.deleteOne({ _id: user.id });
+            return true;
+        },
+        async updateAuthByUserID(parent, args, context) {
+            const user = (await mongoModels.userModel.findById(args.userId));
+            if (typeof user === 'undefined') {
+                return Error("userId not found");
+            };
+            const auth = await mongoModels.authModel.findById(user.authId);
+            auth.username = (typeof args.username === 'undefined') ? auth.username : args.username;
+            auth.password = (typeof args.password === 'undefined') ? auth.password : args.password;
+            await auth.save();
+            return auth;
+        },
+        async updateFinanceByUserID(parent, args, context) {
+            const user = (await mongoModels.userModel.findById(args.userId));
+            if (typeof user === 'undefined') {
+                return Error("userId not found");
+            };
+            const fin = await mongoModels.financeModel.findById(user.finId);
+            fin.f01k = (typeof args.f01k === 'undefined') ? fin.f01k : args.f01k;
+            fin.salary = (typeof args.salary === 'undefined') ? fin.salary : args.salary;
+            fin.pre_tax_income = (typeof args.pre_tax_income === 'undefined') ? fin.pre_tax_income : args.pre_tax_income;
+            fin.social_security = (typeof args.social_security === 'undefined') ? fin.social_security : args.social_security;
+            fin.medicare_tax = (typeof args.medicare_tax === 'undefined') ? fin.medicare_tax : args.medicare_tax;
+            fin.federal_tax = (typeof args.federal_tax === 'undefined') ? fin.federal_tax : args.federal_tax;
+            fin.state_tax = (typeof args.state_tax === 'undefined') ? fin.state_tax : args.state_tax;
+            fin.discretionary = (typeof args.discretionary === 'undefined') ? fin.discretionary : args.discretionary;
+            await fin.save();
+            return fin;
+        },
+        async addAccountByUserID(parent, args, context) {
+            const user = await mongoModels.userModel.findById(args.userId);
+            if (typeof user === "undefined") {
+                return Error("userId not found");
             }
-            db.users.push(newUser)
-            return newUserId
-        },
-        deleteUserByUserID(parent, args, context) {
-            const user = db.users.find((user) => user.id === args.userId)
-            if (user === undefined) {
-                return false
-            }
-            const {finId, authId, accntIds} = user
-            db.finances = db.finances.filter((fin) => fin.id !== finId)
-            db.auths = db.auths.filter((auth) => auth.id !== authId)
-            db.accounts = db.accounts.filter((accnt) => accntIds.indexOf(accnt.id) === -1)
-            db.users = db.users.filter((user) => user.id !== args.userId)
-            return true
-        },
-        updateAuthByUserID(parent, args, context) {
-            db.auths = db.auths.map((auth) => {
-                if (auth.userId === args.userId) {
-                    return { ...auth, 
-                        username: args.username,
-                        password: args.password
-                    }
-                } 
-                return auth
-            })
-            return db.auths.find((auth) => auth.userId === args.userId)
-        },
-        updateFinanceByUserID(parent, args, context) {
-            db.finances = db.finances.map((fin) => {
-                if (fin.userId === args.userId) {
-                    return { ...fin, 
-                        f01k: args.f01k,
-                        salary: args.salary,
-                        pre_tax_income: args.pre_tax_income,
-                        social_security: args.social_security,
-                        medicare_tax: args.medicare_tax,
-                        federal_tax: args.federal_tax,
-                        state_tax: args.state_tax,
-                        discretionary: args.discretionary
-                    }
-                } 
-                return fin
-            })
-            return db.finances.find((fin) => fin.userId === args.userId)
-        },
-        addAccountByUserID(parent, args, context) {
-            const maxAccntId = db.accounts.reduce(
-                (accumulator, currentValue) => Math.max(accumulator, parseInt(currentValue.id)),
-                1,
-            );
-            const newAccntId = String(maxAccntId + 1)
-            const newAccnt = {
-                id: newAccntId,
+            const newAccnt = await mongoModels.accountModel.create({
                 userId: args.userId,
-                holding: args.holding,
-                interestRate: args.interestRate
-            }
-            db.users = db.users.map((user) => {
-                if (user.id === args.userId) {
-                    return { ...user, accntIds: { ...user.accntIds, newAccntId} }
-                }
-                return user
-            })
-            db.accounts.push(newAccnt)
+                holding: (typeof args.holding === 'undefined') ? DEFAULTS.holding : args.holding,
+                interestRate: (typeof args.interest_rate === 'undefined') ? DEFAULTS.interest_rate : args.interest_rate
+            });
+            user.accntIds.push(newAccnt.id);
+            await user.save();
             return newAccnt
         },
-        delAccountByAccntID(parent, args, context) {
-            const accnt = db.accounts.find((accnt) => accnt.id === args.accntID)
-            if (accnt === undefined) {
-                return false
-            }
-            db.accounts = db.accounts.filter((accnt) => accnt.id !== args.accntID)
-            return true
+        async delAccountByAccntID(parent, args, context) {
+            const accnt = await mongoModels.accountModel.findById(args.accntID);
+            if (typeof accnt === undefined) {
+                return false;
+            };
+            const user = await mongoModels.userModel.findById(accnt.userId)
+            const index = user.accntIds.indexOf(accnt.id)
+            user.accntIds.splice(index, 1)
+            await user.save();
+            await mongoModels.accountModel.deleteOne({ _id: accnt.id });
+            return true;
         }
-    },
+    }
 }

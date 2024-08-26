@@ -28,18 +28,18 @@ export const typeDefs = `
         id: ID
         user: User
         holding: Float
-        interestRate: Float
+        interest_rate: Float
     }
     type Query {
         users: [User]
         user(userId: ID!): User
     }
     type Mutation {
-        createUserByName(name: String!): ID
+        createUserByName(name: String!, username: String, password: String, f01k: Float, salary: Float, pre_tax_income: Float, social_security: Float, medicare_tax: Float, federal_tax: Float, state_tax: Float, discretionary: Float): ID
         deleteUserByUserID(userId: ID!): Boolean
-        updateAuthByUserID(userId: ID!, username: String!, password: String!): Auth
-        updateFinanceByUserID(userId: ID!, f01k: Float!, salary: Float!, pre_tax_income: Float!, social_security: Float!, medicare_tax: Float!, federal_tax: Float!, state_tax: Float!, discretionary: Float!): Finance
-        addAccountByUserID(userId: ID!, holding: Float!, interestRate: Float!): Account
+        updateAuthByUserID(userId: ID!, username: String, password: String): Auth
+        updateFinanceByUserID(userId: ID!, f01k: Float, salary: Float, pre_tax_income: Float, social_security: Float, medicare_tax: Float, federal_tax: Float, state_tax: Float, discretionary: Float): Finance
+        addAccountByUserID(userId: ID!, holding: Float, interest_rate: Float): Account
         delAccountByAccntID(accntID: ID!): Boolean
     }
-`
+`;
