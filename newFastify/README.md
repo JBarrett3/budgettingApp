@@ -18,6 +18,9 @@ For production mode
 
 Run the test cases.
 
-## Learn More
 
-To learn Fastify, check out the [Fastify documentation](https://fastify.dev/docs/latest/).
+## Database connection
+
+To avoid errors, make sure to do the following:
+ - supply the password to DB_PASSWORD in consts.ts
+ - Whitelist your IP address at the mongo server website
