@@ -102,7 +102,7 @@ Note that the parameters for each request can be read from the interfaces in [sr
         - required params: userId
         - optional params: f01k, salary, pre_tax_income, social_security, medicare_tax, federal_tax, state_tax, discretionary
         - returns: id, user { id }, f01k, salary, pre_tax_income, social_security, medicare_tax, federal_tax, state_tax, discretionary
-    - updateAccountByAccntId (TODO)
+    - updateAccountByAccntId
         - desc: updates specific account by accntId
         - required params: accntId
         - optional params: holding, interest_rate
