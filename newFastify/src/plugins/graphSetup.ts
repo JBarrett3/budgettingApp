@@ -6,9 +6,18 @@ import { User, Auth, Account, Finance } from '../dataSupport/mongoSchema'
 import { ObjectId } from '@fastify/mongodb'
 
 //arg interfaces
-interface usersArgs {}
+interface allQueryArgs {}
 interface userArgs {
     userId: string
+}
+interface authArgs {
+    authId: string
+}
+interface finArgs {
+    finId: string
+}
+interface AccntArgs {
+    accntId: string
 }
 interface newUserArgs {
     name: string,
@@ -55,18 +64,57 @@ export default fp(async (fastify) => {
     //resolvers definitions
     const graphResolvers = {
         Query: {
-            users: async (_: undefined, args: usersArgs): Promise<User[]> => {
+            users: async (_: undefined, args: allQueryArgs): Promise<User[]> => {
                 return await fastify.database.user.find({})
             },
-            user: async (_: undefined, args: userArgs): Promise<User> => {
+            user: async (_: undefined, args: userArgs): Promise<User|null> => {
                 if (args.userId !== null) {
                     const user = await fastify.database.user.findById(args.userId)
                     if (user !== null) {
                         return user
                     }
-                    throw new Error("user does not exist")
+                    return null
                 }
                 throw new Error("missing userId field in request")
+            },
+            auths: async (_: undefined, args: allQueryArgs): Promise<Auth[]> => {
+                return await fastify.database.auth.find({})
+            },
+            auth: async (_: undefined, args: authArgs): Promise<Auth|null> => {
+                if (args.authId !== null) {
+                    const auth = await fastify.database.auth.findById(args.authId)
+                    if (auth !== null) {
+                        return auth
+                    }
+                    return null
+                }
+                throw new Error("missing authId field in request")
+            },
+            finances: async (_: undefined, args: allQueryArgs): Promise<Finance[]> => {
+                return await fastify.database.finance.find({})
+            },
+            finance: async (_: undefined, args: finArgs): Promise<Finance|null> => {
+                if (args.finId !== null) {
+                    const fin = await fastify.database.finance.findById(args.finId)
+                    if (fin !== null) {
+                        return fin
+                    }
+                    return null
+                }
+                throw new Error("missing finId field in request")
+            },
+            accounts: async (_: undefined, args: allQueryArgs): Promise<Account[]> => {
+                return await fastify.database.account.find({})
+            },
+            account: async (_: undefined, args: AccntArgs): Promise<Account|null> => {
+                if (args.accntId !== null) {
+                    const accnt = await fastify.database.account.findById(args.accntId)
+                    if (accnt !== null) {
+                        return accnt
+                    }
+                    return null
+                }
+                throw new Error("missing accntId field in request")
             },
             createUserByName: async (_: undefined, args: newUserArgs): Promise<number> => {
                 const newUser = await fastify.database.user.create({
@@ -178,7 +226,33 @@ export default fp(async (fastify) => {
                 };
                 return false;
             }
-        }
+        },
+        User: {
+            auth: async (parent: User): Promise<Auth|null> => {
+                return await fastify.database.auth.findById(parent.authId);
+            },
+            finance: async (parent: User): Promise<Finance|null> => {
+                return await fastify.database.finance.findById(parent.finId);
+            },
+            accounts: async (parent: User): Promise<(Account|null)[]> => {
+                return await Promise.all(parent.accntIds.map(async accntId => await fastify.database.account.findById(accntId)))
+            }
+        },
+        Auth: {
+            user: async (parent: Auth) => {
+                return await fastify.database.user.findById(parent.userId);
+            }
+        },
+        Finance: {
+            user: async(parent: Finance) => {
+                return await fastify.database.finance.findById(parent.userId);
+            }
+        },
+        Account: {
+            user: async(parent: Account) => {
+                return await fastify.database.account.findById(parent.userId);
+            }
+        },
     }
     //registration with fastify
     fastify.register(mercurius, {
@@ -193,33 +267,3 @@ export default fp(async (fastify) => {
           },
     })
 })
-
-// TODO implement these so that queries requiring subqueries will work
-// Query: {
-    // User: {
-    //     async auth(parent, args, context) {
-    //         return await mongoModels.authModel.findById(parent.authId);
-    //     },
-    //     async finance(parent, args, context) {
-    //         return await mongoModels.financeModel.findById(parent.finId);
-    //     },
-    //     async accounts(parent, args, context) {
-    //         return await parent.accntIds.map((accntId) => mongoModels.accountModel.findById(accntId));
-    //     }
-    // },
-    // Auth: {
-    //     async user(parent, args, context) {
-    //         return await mongoModels.userModel.findById(parent.userId);
-    //     }
-    // },
-    // Finance: {
-    //     async user(parent, args, context) {
-    //         return await mongoModels.financeModel.findById(parent.userId);
-    //     }
-    // },
-    // Account: {
-    //     async user(parent, args, context) {
-    //         return await mongoModels.accountModel.findById(parent.userId);
-    //     }
-    // },
-  

@@ -3,6 +3,12 @@ export const graphSchema = `
     type Query {
         users: [User]
         user(userId: ID): User
+        auths: [Auth]
+        auth(authId: ID): Auth
+        finances: [Finance]
+        finance(finId: ID): Finance
+        accounts: [Account]
+        account(accntId: ID): Account
         
         createUserByName(name: String!, username: String, password: String, f01k: Float, salary: Float, pre_tax_income: Float, social_security: Float, medicare_tax: Float, federal_tax: Float, state_tax: Float, discretionary: Float): ID
         deleteUserByUserID(userId: ID!): Boolean
