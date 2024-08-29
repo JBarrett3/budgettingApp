@@ -3,10 +3,12 @@ import mercurius from 'mercurius'
 import { graphSchema } from '../dataSupport/graphSchema'
 import { DEFAULTS } from '../consts'
 import { User, Auth, Account, Finance } from '../dataSupport/mongoSchema'
+import { ObjectId } from '@fastify/mongodb'
 
 //arg interfaces
-interface usersArgs {
-    userId?: string
+interface usersArgs {}
+interface userArgs {
+    userId: string
 }
 interface newUserArgs {
     name: string,
@@ -22,7 +24,7 @@ interface newUserArgs {
     discretionary?: number
 }
 interface deleteUserByUserIdArgs {
-    userId: number
+    userId: string
 }
 interface updateAuthByUserIdArgs {
     userId: string,
@@ -54,12 +56,17 @@ export default fp(async (fastify) => {
     const graphResolvers = {
         Query: {
             users: async (_: undefined, args: usersArgs): Promise<User[]> => {
-                if (typeof args.userId === 'undefined') {
-                    return await fastify.database.user.find({})
+                return await fastify.database.user.find({})
+            },
+            user: async (_: undefined, args: userArgs): Promise<User> => {
+                if (args.userId !== null) {
+                    const user = await fastify.database.user.findById(args.userId)
+                    if (user !== null) {
+                        return user
+                    }
+                    throw new Error("user does not exist")
                 }
-                const users = await fastify.database.user.find({_id: args.userId})
-                console.log(users)
-                return users
+                throw new Error("missing userId field in request")
             },
             createUserByName: async (_: undefined, args: newUserArgs): Promise<number> => {
                 const newUser = await fastify.database.user.create({
@@ -99,10 +106,11 @@ export default fp(async (fastify) => {
             deleteUserByUserID: async (_: undefined, args: deleteUserByUserIdArgs): Promise<boolean> => {
                 const user = await fastify.database.user.findById(args.userId);
                 if (user !== null) {
-                    fastify.database.finance.deleteOne({ _id: user.finId });
-                    fastify.database.auth.deleteOne({ _id: user.authId });
-                    user.accntIds.map((accntId) => fastify.database.account.deleteOne({ _id: accntId }));
-                    fastify.database.user.deleteOne({ _id: user.id });
+                    console.log(user)
+                    await fastify.database.finance.deleteOne({ _id: new ObjectId(user.finId) });
+                    await fastify.database.auth.deleteOne({ _id: new ObjectId(user.authId) });
+                    user.accntIds.map(async (accntId) => await fastify.database.account.deleteOne({ _id: new ObjectId(accntId) }));
+                    await fastify.database.user.deleteOne({ _id: new ObjectId(args.userId) });
                     return true
                 }
                 return false
@@ -163,7 +171,7 @@ export default fp(async (fastify) => {
                         const index = user.accntIds.indexOf(accnt.id)
                         user.accntIds.splice(index, 1)
                         await user.save();
-                        await fastify.database.account.deleteOne({ _id: accnt.id });
+                        await fastify.database.account.deleteOne({ _id: new ObjectId(accnt.id) });
                         return true;
                     }
                     throw Error("Internal error: account missing a user obj");
@@ -175,7 +183,14 @@ export default fp(async (fastify) => {
     //registration with fastify
     fastify.register(mercurius, {
         schema: graphSchema,
-        resolvers: graphResolvers
+        resolvers: graphResolvers,
+        errorFormatter: (result, ctx) => {
+            const def = mercurius.defaultErrorFormatter(result, ctx);
+            return {
+              statusCode: def.statusCode || 500,
+              response: def.response,
+            };
+          },
     })
 })
 

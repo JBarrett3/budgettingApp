@@ -1,7 +1,8 @@
 // TODO split Query into Query and Mutation (right now I can't do mutations as a separate type. Probably a querying issue)
 export const graphSchema = `
     type Query {
-        users(userId: ID): [User]
+        users: [User]
+        user(userId: ID): User
         
         createUserByName(name: String!, username: String, password: String, f01k: Float, salary: Float, pre_tax_income: Float, social_security: Float, medicare_tax: Float, federal_tax: Float, state_tax: Float, discretionary: Float): ID
         deleteUserByUserID(userId: ID!): Boolean
@@ -42,7 +43,3 @@ export const graphSchema = `
         interest_rate: Float
     }
 `
-
-/*
-        
-*/
