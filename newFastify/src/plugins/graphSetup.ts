@@ -4,6 +4,9 @@ import { graphSchema } from '../dataSupport/graphSchema'
 import { DEFAULTS } from '../consts'
 import { User, Auth, Account, Finance } from '../dataSupport/mongoSchema'
 import { ObjectId } from '@fastify/mongodb'
+import { FastifyBaseLogger, FastifyInstance, FastifyTypeProviderDefault, RawServerDefault } from 'fastify'
+import mongoose from 'mongoose'
+import { IncomingMessage, ServerResponse } from 'http'
 
 //arg interfaces
 interface allQueryArgs {}
@@ -51,16 +54,31 @@ interface updateFinanceByUserIdArgs {
     state_tax?: number, 
     discretionary?: number
 }
+interface updateAccountByAccntIdArgs {
+    accntId: string, 
+    holding: number,
+    interest_rate: number
+}
 interface addAccountByUserIdArgs {
     userId: string, 
     holding?: number, 
     interest_rate?: number
 }
 interface delAccountByAccntIdArgs {
-    accntID: string
+    accntId: string
 }
 
-export default fp(async (fastify) => {
+interface fastifyWithDB extends FastifyInstance<RawServerDefault, IncomingMessage, ServerResponse<IncomingMessage>, FastifyBaseLogger, FastifyTypeProviderDefault> {
+    database: {
+        user: mongoose.Model<User>,
+        auth: mongoose.Model<Auth>,
+        finance: mongoose.Model<Finance>,
+        account: mongoose.Model<Account>
+    }
+}
+
+export default fp(async (fastifyWithoutDB) => {
+    const fastify = fastifyWithoutDB as fastifyWithDB
     //resolvers definitions
     const graphResolvers = {
         Query: {
@@ -116,7 +134,7 @@ export default fp(async (fastify) => {
                 }
                 throw new Error("missing accntId field in request")
             },
-            createUserByName: async (_: undefined, args: newUserArgs): Promise<number> => {
+            createUserByName: async (_: undefined, args: newUserArgs): Promise<User> => {
                 const newUser = await fastify.database.user.create({
                     name: args.name,
                     accntIds: []
@@ -149,21 +167,24 @@ export default fp(async (fastify) => {
                 //     newUser.accntIds.push(newAccnt.id)
                 // })
                 newUser.save();
-                return newUser.id;
+                return newUser;
             },
-            deleteUserByUserID: async (_: undefined, args: deleteUserByUserIdArgs): Promise<boolean> => {
+            addAccountByUserId: async (_: undefined, args: addAccountByUserIdArgs): Promise<Account> => {
                 const user = await fastify.database.user.findById(args.userId);
                 if (user !== null) {
-                    console.log(user)
-                    await fastify.database.finance.deleteOne({ _id: new ObjectId(user.finId) });
-                    await fastify.database.auth.deleteOne({ _id: new ObjectId(user.authId) });
-                    user.accntIds.map(async (accntId) => await fastify.database.account.deleteOne({ _id: new ObjectId(accntId) }));
-                    await fastify.database.user.deleteOne({ _id: new ObjectId(args.userId) });
-                    return true
+                    const newAccnt = await fastify.database.account.create({
+                        userId: args.userId,
+                        holding: (typeof args.holding === 'undefined') ? DEFAULTS.holding : args.holding,
+                        interest_rate: (typeof args.interest_rate === 'undefined') ? DEFAULTS.interest_rate : args.interest_rate
+                    });
+                    console.log(newAccnt)
+                    user.accntIds.push(newAccnt.id);
+                    await user.save();
+                    return newAccnt
                 }
-                return false
+                throw Error("userId not found");
             },
-            updateAuthByUserID: async (_: undefined, args: updateAuthByUserIdArgs): Promise<Auth> =>  {
+            updateAuthByUserId: async (_: undefined, args: updateAuthByUserIdArgs): Promise<Auth> =>  {
                 const user = await fastify.database.user.findById(args.userId);
                 if (user !== null) {
                     const auth = await fastify.database.auth.findById(user.authId);
@@ -177,8 +198,8 @@ export default fp(async (fastify) => {
                 }
                 throw Error("userId not found");
             },
-            updateFinanceByUserID: async (_: undefined, args: updateFinanceByUserIdArgs): Promise<Finance> => {
-                const user = (await fastify.database.user.findById(args.userId));
+            updateFinanceByUserId: async (_: undefined, args: updateFinanceByUserIdArgs): Promise<Finance> => {
+                const user = await fastify.database.user.findById(args.userId);
                 if (user !== null) {
                     const fin = await fastify.database.finance.findById(user.finId);
                     if (fin !== null) {
@@ -197,22 +218,30 @@ export default fp(async (fastify) => {
                 };
                 throw Error("userId not found");
             },
-            addAccountByUserID: async (_: undefined, args: addAccountByUserIdArgs): Promise<Account> => {
+            updateAccountByAccntId: async (_: undefined, args: updateAccountByAccntIdArgs): Promise<Account|null> => {
+                const accnt = await fastify.database.account.findById(args.accntId)
+                if (accnt !== null) {
+                    accnt.holding = (typeof args.holding === 'undefined') ? accnt.holding : args.holding;
+                    accnt.interest_rate = (typeof args.interest_rate === 'undefined') ? accnt.interest_rate : args.interest_rate;
+                    await accnt.save()
+                    return accnt
+                }
+                return null
+            },
+            deleteUserByUserId: async (_: undefined, args: deleteUserByUserIdArgs): Promise<boolean> => {
                 const user = await fastify.database.user.findById(args.userId);
                 if (user !== null) {
-                    const newAccnt = await fastify.database.account.create({
-                        userId: args.userId,
-                        holding: (typeof args.holding === 'undefined') ? DEFAULTS.holding : args.holding,
-                        interestRate: (typeof args.interest_rate === 'undefined') ? DEFAULTS.interest_rate : args.interest_rate
-                    });
-                    user.accntIds.push(newAccnt.id);
-                    await user.save();
-                    return newAccnt
+                    console.log(user)
+                    await fastify.database.finance.deleteOne({ _id: new ObjectId(user.finId) });
+                    await fastify.database.auth.deleteOne({ _id: new ObjectId(user.authId) });
+                    user.accntIds.map(async (accntId) => await fastify.database.account.deleteOne({ _id: new ObjectId(accntId) }));
+                    await fastify.database.user.deleteOne({ _id: new ObjectId(args.userId) });
+                    return true
                 }
-                throw Error("userId not found");
+                return false
             },
-            delAccountByAccntID: async (_: undefined, args: delAccountByAccntIdArgs): Promise<boolean> => {
-                const accnt = await fastify.database.account.findById(args.accntID);
+            delAccountByAccntId: async (_: undefined, args: delAccountByAccntIdArgs): Promise<boolean> => {
+                const accnt = await fastify.database.account.findById(args.accntId);
                 if (accnt !== null) {
                     const user = await fastify.database.user.findById(accnt.userId)
                     if (user !== null) {
@@ -245,12 +274,12 @@ export default fp(async (fastify) => {
         },
         Finance: {
             user: async(parent: Finance) => {
-                return await fastify.database.finance.findById(parent.userId);
+                return await fastify.database.user.findById(parent.userId);
             }
         },
         Account: {
             user: async(parent: Account) => {
-                return await fastify.database.account.findById(parent.userId);
+                return await fastify.database.user.findById(parent.userId);
             }
         },
     }

@@ -26,7 +26,7 @@ export interface Finance {
 export interface Account {
     userId: string,
     holding: number,
-    interestRate: number
+    interest_rate: number
 }
 
 //models
@@ -55,5 +55,5 @@ export const financeSchema: Schema<Finance> = new Schema({
 export const accountSchema: Schema<Account> = new Schema({
     userId: SchemaTypes.ObjectId,
     holding: Number,
-    interestRate: Number
+    interest_rate: Number
 })

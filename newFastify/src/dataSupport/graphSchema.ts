@@ -10,12 +10,13 @@ export const graphSchema = `
         accounts: [Account]
         account(accntId: ID): Account
         
-        createUserByName(name: String!, username: String, password: String, f01k: Float, salary: Float, pre_tax_income: Float, social_security: Float, medicare_tax: Float, federal_tax: Float, state_tax: Float, discretionary: Float): ID
-        deleteUserByUserID(userId: ID!): Boolean
-        updateAuthByUserID(userId: ID!, username: String, password: String): Auth
-        updateFinanceByUserID(userId: ID!, f01k: Float, salary: Float, pre_tax_income: Float, social_security: Float, medicare_tax: Float, federal_tax: Float, state_tax: Float, discretionary: Float): Finance
-        addAccountByUserID(userId: ID!, holding: Float, interest_rate: Float): Account
-        delAccountByAccntID(accntID: ID!): Boolean
+        createUserByName(name: String!, username: String, password: String, f01k: Float, salary: Float, pre_tax_income: Float, social_security: Float, medicare_tax: Float, federal_tax: Float, state_tax: Float, discretionary: Float): User
+        addAccountByUserId(userId: ID!, holding: Float, interest_rate: Float): Account
+        updateAuthByUserId(userId: ID!, username: String, password: String): Auth
+        updateFinanceByUserId(userId: ID!, f01k: Float, salary: Float, pre_tax_income: Float, social_security: Float, medicare_tax: Float, federal_tax: Float, state_tax: Float, discretionary: Float): Finance
+        updateAccountByAccntId(accntId: ID!, holding: Float, interest_rate: Float): Account
+        deleteUserByUserId(userId: ID!): Boolean
+        delAccountByAccntId(accntId: ID!): Boolean
     }
     type User {
         id: ID

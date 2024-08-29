@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin'
-import { URI, DB_USER, DB_PASSWORD, DB_ENV } from '../consts.js'
+import { URI, DB_USER, DB_PASSWORD, DB_ENV } from '../consts'
 import mongoose from 'mongoose'
-import {User, Auth, Finance, Account, userSchema, authSchema, financeSchema, accountSchema} from '../dataSupport/mongoSchema.js'
+import {User, Auth, Finance, Account, userSchema, authSchema, financeSchema, accountSchema} from '../dataSupport/mongoSchema'
 
 export default fp(async (fastify) => {
     const dbURL: string = URI(DB_USER, DB_PASSWORD)

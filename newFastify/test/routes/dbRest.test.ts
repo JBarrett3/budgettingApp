@@ -1,14 +1,24 @@
-import { FastifyPluginAsync } from "fastify"
+//TODO implement database testing
+import { test } from 'node:test'
+import * as assert from 'node:assert'
+import { build } from '../helper'
 
-// TODO allow the user to send the request. This is tricky since the type interface with typescvript is a bit of a pain
-const dbRoutes: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  fastify.get('/graphQL', async (req, res) => {
-    return res.graphql('{ account(accntId: "66d0722ded950fe90d148efe") { holding } }')
-  });
-  /*
-  With graphQL, we only use the one route, but any query can hit the resolvers in the graphSetup.ts file
-  Leaving a few examples here:
-  '{ users { name } }' //note that parenthesis are omitted if there are no args at all
+test('rest tests', async (t) => {
+  const app = await build(t)
+
+  const res = await app.inject({
+    url: '/db/rest'
+  })
+
+  assert.equal(res.payload, 'simple test for now')
+})
+
+test('getUsers', async (t) => {
+
+})
+
+/*
+'{ users { name } }' //note that parenthesis are omitted if there are no args at all
   '{ users { name, auth { username }, accounts { holding } } }'
   '{ user(userId: "66cfb10d5967e545f2caaf8b") { name } }'
   '{ auths { username } }'
@@ -24,9 +34,4 @@ const dbRoutes: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   '{ updateFinanceByUserID(userId: "66cfb10d5967e545f2caaf8b", f01k: 500) { f01k, salary } }'
   '{ addAccountByUserID(userId: "66cfb10d5967e545f2caaf8b", holding: 500, interest_rate: 0.01) { holding } }'
   '{ delAccountByAccntID(accntID: "66d06b54826546376d5fedb4") }'
-  */
-}
-
-
-
-export default dbRoutes;
+*/
