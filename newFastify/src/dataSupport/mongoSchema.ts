@@ -14,19 +14,19 @@ export interface Auth {
 }
 export interface Finance {
     userId: string,
-    f01k: Number,
-    salary: Number,
-    pre_tax_income: Number,
-    social_security: Number,
-    medicare_tax: Number,
-    federal_tax: Number,
-    state_tax: Number,
-    discretionary: Number
+    f01k: number,
+    salary: number,
+    pre_tax_income: number,
+    social_security: number,
+    medicare_tax: number,
+    federal_tax: number,
+    state_tax: number,
+    discretionary: number
 }
 export interface Account {
     userId: string,
-    holding: Number,
-    interestRate: Number
+    holding: number,
+    interestRate: number
 }
 
 //models

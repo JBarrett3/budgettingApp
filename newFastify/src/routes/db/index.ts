@@ -1,23 +1,20 @@
 import { FastifyPluginAsync } from "fastify"
 
+// TODO allow the user to send the request. This is tricky since the type interface with typescvript is a bit of a pain
 const dbRoutes: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  /* these are techically supported, but we use graphQL as middleware, so we do not access the mongo database like this directly */
-  // fastify.get('/users', async function (req, res) {
-  //   res.send(await fastify.database.user.find({})).status(200)
-  // })
-  // fastify.get('/auths', async function (req, res) {
-  //   res.send(await fastify.database.auth.find({})).status(200)
-  // })
-  // fastify.get('/finances', async function (req, res) {
-  //   res.send(await fastify.database.finance.find({})).status(200)
-  // })
-  // fastify.get('/accounts', async function (req, res) {
-  //   res.send(await fastify.database.account.find({})).status(200)
-  // })
-  fastify.get('/', async function (req, reply) {
-    const query = '{ add(x: 2, y: 2) }'
-    return reply.graphql(query)
-  })
+  fastify.get('/', async (req, res) => {
+    return res.graphql('{ users() }')
+  });
+  /*
+  With graphQL, we only use the one route, but any query can hit the resolvers in the graphSetup.ts file
+  Leaving a few examples here:
+  '{ createUserByName(name: "john") }'
+  '{ createUserByName(name: "john", username: "johnnyBoy", password: "superSafePass") }'
+  '{ users() }' //this actually doesn't work yet but will eventually
+  '{ users(id: "66cfab15ae08d4983eaf6000") }' //this actually doesn't work yet but will eventually
+  */
 }
+
+
 
 export default dbRoutes;
